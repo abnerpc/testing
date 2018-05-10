@@ -22,25 +22,27 @@ def calc_number(one, two):
     return result
 ```
 
-And here is how we write a simple function to test the result of calc_number:
+And here is how we write a simple function to test the result of `calc_number`:
 
 ```python
-import calc_number  # 1
+import calc_number                      # 1
 
 def test_calc_number():
-    result = calc_number(10, 30)   # 2
-    assert result == 40            # 3
+    result = calc_number(10, 30)        # 2
+    assert result == 40                 # 3
 ```
 
 How it works:
 
-1. Import the function to be tested (calc_number)
+1. Import the function to be tested (`calc_number`)
 2. Call the function we want to test
 3. Verify if the result of the tested function is the expected
 
 To run this test function we just have to call the runner, in our case pytest:
 
-`$ pytest`
+```
+$ pytest
+```
 
 And if the test pass, this is what you should see:
 
@@ -63,14 +65,14 @@ def calc_number(one, two):
 
 Now, the result of the function is the same, the test we did before still passes, but there's something new that we also need to test.
 
-We have a send_email call based on the result of the calculation, and we need to test if it was called or not. This will be explained in the Mocking part.
+We have a `send_email` call based on the result of the calculation, and we need to test if it was called or not. This will be explained in the Mocking part.
 
 So, basicaly to test a function, we have to cover all the calls inside the function, and of course the result.
 
 
 ## 2. Fixtures
 
-Fixtures are functions usualy placed in a file called conftest.py in the tests package, which can be used as parameters in the test functions.
+Fixtures are functions usualy placed in a file called `conftest.py` in the tests package, which can be used as parameters in the test functions.
 
 It is used to keep code simple and avoid repeated code.
 
@@ -89,13 +91,12 @@ def dummy_request():
 After we create this fixture, we can use it in any test function using the exactly same name of the fixture as parameter:
 
 ```python
-# tests/test_calc.py
 def test_some_view(dummy_request):
     assert dummy_request == testing.DummyRequest()
 ```
 
 We can also create fixtures based on another fixture.
-Imagine now that instead of this dummy_request fixture, we need a request with some user logged on, so we can write a new fixture using the dummy_request one:
+Imagine now that instead of this `dummy_request` fixture, we need a request with some user logged on, so we can write a new fixture using the `dummy_request` one:
 
 ```python
 # tests/conftest.py
@@ -112,7 +113,7 @@ def user_logged_request(dummy_request):  # uses the fixture we defined before
     return dummy_request
 ```
 
-Also, this is a very good practice because keeps the data consistent and easy to change if we need something new for all the requests fixtures.
+This is a very good practice because keeps the data consistent and easy to change if we need something new for all the requests fixtures.
 
 
 ## 3. Mocking
@@ -131,9 +132,9 @@ def test_myfunction(some_function):
     myfunction()
 ```
 
-This is the most common way. You apply the patch in your test function and when you run the function you are testing, the mocked function or class or module will contain an object Mock, which you can configure to return any result you want using the parameter on the test function, and later you can check if this object was called like it meant to be.
+This is the most common way. You apply the patch in your test function and when you run the function you are testing, the mocked function or class or module will contain a `MagicMock`, which is a Mock and you can configure to return any result you want using the parameter on the test function, and later you can check if this object was called like it should.
 
-To configure the mock to return an specific value, just use the return_value attribute in the Mock parameter. Like:
+To configure the mock to return an specific value, just use the return_value attribute in the mock parameter. Like:
 
 ```python
 from mock import patch
@@ -144,7 +145,7 @@ def test_myfunction(some_function):
     myfunction()
 ```
 
-Just like that, when you execute your myfunction and the some_function mocked runs, it will returns the 'testing' string.
+Just like that, when you execute your `myfunction` and the `some_function` mocked runs, it will returns the 'testing' string.
 
 Another way to mock, is creating the mock by hand like this:
 
@@ -233,28 +234,24 @@ def test_calc_number(send_email):
 
 If you execute this test function, the test will pass, but the email still will be sent, and the `send_email` function was not mocked as expected.
 
-But why ? Let's walk through this test function again, and in more details :)
+But why ? Let's walk through this test function again in more details :)
 
 1. Import the function to be tested:
-Here, right here. You notice what we did ? I will explain: We imported `calc_number`, but what this means in python ?
-When this line of code runs, it will run the module `myapp.calc.py`, *import* everything inside it, define the functions, etc.
-So, right now, the `myapp.main.send_email` function was already imported, and the real one. The one that sends the email.
-You can also import the `send_email` real function directly from the module `myapp.calc.py`, yes, from the calc module.
-
+   * Here, right here. You notice what we did ? I will explain: We imported `calc_number`, but what this means in python ?
+   * When this line of code runs, it will run the module `myapp.calc.py`, *import* everything inside it, define the functions, etc.
+   * So, right now, the `myapp.mail.send_email` function was already imported, and the real one. The one that sends the email.
+   * You can also import the `send_email` real function directly from the module `myapp.calc.py`, yes, from the calc module.
 2. Apply the decorator for `myapp.mail.send_email`:
-So, before the test function runs, this decorator will take action and apply the Mock in the function `myapp.mail.send_email`.
-And here you can see that this is the wrong place. We are mocking now, but the other module `myapp.calc.py` already has the real one imported.
-This will not have effect inside our test.
-
+   * So, before the test function runs, this decorator will take action and apply the Mock in the function `myapp.mail.send_email`.
+   * And here you can see that this is the wrong place. We are mocking now, but the other module `myapp.calc.py` already has the real one imported.
+   * This will not have effect inside our test.
 3. Execute the function being tested:
-So, we are going to run the function we are testing here, and the real `send_email` function will be used and send the email.
-And right here you will try everything to fix this and complain with the Mock creator. But you are wrong. :P
-
+   * So, we are going to run the function we are testing here, and the real `send_email` function will be used and send the email.
+   * And right here you will try everything to fix this and complain with the Mock creator. But you are wrong. :P
 4. Verify if the result is the expected:
-Well, the result is the one expected, but the `send_email` function still is sending emails and the mock is not working.
+   * Well, the result is the one expected, but the `send_email` function still is sending emails and the mock is not working.
 
-
-Well, after this little trip inside the test, I think now we can fix this. Because now we know which `send_email` function we need to mock.
+After this little trip inside the test, I think now we can fix this. Because now we know which `send_email` function we need to mock.
 
 And here we go again:
 
@@ -321,9 +318,9 @@ Just running a simple test function, we can test the result of this function, bu
 
 ```python
 from mock import patch                            # 1
-from myapp.calc import calc_number                 # 2
+from myapp.calc import calc_number                # 2
 
-@patch('myapp.mail.send_email')                    # 3
+@patch('myapp.mail.send_email')                   # 3
 def test_calc_number_less_than_100(send_email):
     res = calc_number(10, 30)                     # 4
     assert res == 40                              # 5
@@ -338,7 +335,7 @@ How it works:
 5. Verify if the result of the tested function is the expected
 6. Verify if the function was NOT called as expected
 
-In this first example, we passed 10 and 30 as parameter, so we know that the function `send_email` has to be called only if the calculated number is bigger than 100.
+In this example, we passed 10 and 30 as parameter, so we know that the function `send_email` has to be called only if the calculated number is bigger than 100.
 So we use the mock function `assert_not_called`, which will return an error if this function was called. If the function is working and the `send_email` was not called, the test will pass.
 
 Now, this is not the only situation we need to test. In the other hand, if the calculated result is bigger the function **MUST** be called.
@@ -409,7 +406,7 @@ Like before, we just mocked the `send_email` function and assert that it was not
 
 Second test:
 
-```
+```python
 from mock import patch
 from myapp.calc import calc_number
 
